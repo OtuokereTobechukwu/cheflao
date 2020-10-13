@@ -1,6 +1,7 @@
 from decimal import Decimal
 from django.conf import settings
 from shop.models import Product
+import math
 
 
 class Cart(object):
@@ -54,6 +55,7 @@ class Cart(object):
 
         for product in products:
             cart[str(product.id)]['product'] = product
+
         for item in cart.values():
             item['price'] = Decimal(item['price'])
             item['total_price'] = item['price'] * item['quantity']
@@ -66,15 +68,18 @@ class Cart(object):
         return sum(item['quantity'] for item in self.cart.values())
 
     def get_total_price(self):
-        return sum(Decimal(item['price']) * item['quantity'] for item
-                   in self.cart.values())
+        total_price = sum(Decimal(item['price']) * item['quantity'] for item
+                          in self.cart.values())
+        if total_price > 5000:
+            discount = math.ceil(total_price - (total_price * Decimal(20/100)))
+            return discount
+        return total_price
 
     def clear(self):
         # remove cart from session
         del self.session[settings.CART_SESSION_ID]
         self.save()
 
-    def discount(self):
-        # calculate discount for purchases greater than N5000
-        pass
-    
+    # def get_discount(self, total_price):
+    #     # calculate discount for purchases greater than N5000
+    #     return math.ceil(total_price - (total_price * Decimal(20/100)))
